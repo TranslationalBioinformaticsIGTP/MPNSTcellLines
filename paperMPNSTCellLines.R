@@ -9,7 +9,7 @@ library(VariantAnnotation)
 library(BSgenome.Hsapiens.UCSC.hg38.masked)
 
 ######################## Functions #########################################
-source(file = "/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/loadingLumpySVs.R")
+source(file = "./loadingLumpySVs.R")
 source(file = "./MPNST_cellLines/funtionsPaperCellLines.R")
 ################## Parameters #######################
 execution.dir <- "./MPNST_cellLines/WGS"
@@ -586,6 +586,7 @@ for(s in seq_len(length(sample.names))){
 }
 table.to.plot$`STS-26T`$altered[table.to.plot$`STS-26T`$Genes=="TP53"]<-"complete"
 table.to.plot$`STS-26T`$color[table.to.plot$`STS-26T`$Genes=="TP53"]<-"red"
+table.to.plot$S462[table.to.plot$S462$variant %in% "SNV"]
 
 # data.frame(table.to.plot$S462)
 # save(table.info.plot,file = file.path(execution.dir,"results","table.info.plot.2.RData"))

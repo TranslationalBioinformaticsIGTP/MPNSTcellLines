@@ -87,7 +87,7 @@ cnv.ucsc.hg38 <- sortSeqlevels(cnv.ucsc.hg38)
 cnv.ucsc.hg38 <- sort(cnv.ucsc.hg38)
 
 # Selection of interesting genes
-gene.markers <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_cellLines/WGS","special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
+gene.markers <- read.table(file.path("./special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
 gene.markers.gf <- toGRanges(gene.markers$V2,genome = genome)
 mcols(gene.markers.gf) <- gene.markers$V1
 colnames(mcols(gene.markers.gf)) <- "Genes"
@@ -96,8 +96,11 @@ regions.selected <- gene.markers.gf + 1e6
 regions.df <- toDataframe(regions.selected)
 gene.markers.gf <- gene.markers.gf[gene.markers.gf$Genes !="BCR"]
 
-# TSG  COSMIC list
-all.genes.cosmic <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_tumors/WGS","Census_allThu Sep 16 11_23_32 2021.tsv"), sep = "\t",header = T)
+# TSG  COSMIC list: this was downloaded from COSMIC website but make reference to uk.sanger: http://cancer.sanger.ac.uk/census,
+# this is de webpage to download this information 
+# https://cog.sanger.ac.uk/cosmic/GRCh38/cosmic/v95/cancer_gene_census.csv?AWSAccessKeyId=KRV7P7QR9DL41J9EWGA2&Expires=1642007506&Signature=oVGW10M4sf3rGTeU06M1bSFFlys%3D
+
+all.genes.cosmic <- read.table(file.path("./Census_allThu Sep 16 11_23_32 2021.tsv"), sep = "\t",header = T)
 all.genes.cosmic$Genome.Location <-  paste0("chr",all.genes.cosmic$Genome.Location)
 all.genes.cosmic <- all.genes.cosmic[nchar(all.genes.cosmic$Genome.Location)>7,]
 all.genes.cosmic.gr <- toGRanges(all.genes.cosmic$Genome.Location)
@@ -108,7 +111,7 @@ tumor.sup.gr <- all.genes.cosmic.gr[grepl("TSG", all.genes.cosmic.gr$Role.in.Can
 # mcols(tumor.sup.gr) <- tumor.sup[,c(1,2,5,6:20)]
 
 #### Fusion Genes Cosmic ####
-all.fusion.genes.cosmic <- read.csv(file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_tumors/WGS","CosmicFusionExport.tsv"), sep = "\t",header = T,comment.char = "")
+all.fusion.genes.cosmic <- read.csv(file.path("./CosmicFusionExport.tsv"), sep = "\t",header = T,comment.char = "")
 
 all.fusion.genes.cosmic <- data.frame(chr = paste0("chr",all.fusion.genes.cosmic$X3._CHROMOSOME),
                                       start = all.fusion.genes.cosmic$X3._GENOME_START_FROM,
@@ -277,31 +280,31 @@ for (i in seq_len(length(sample.names))){
 load(file = file.path(execution.dir,"results/", lumpy.file))
 i =1
 
-######### Fusion genes DDBB ##### 
-filt.list$`HS-Sch-2`
-fus <- subsetByOverlaps(all.fusion.genes.cosmic.gr, filt.list$`HS-Sch-2`$AllRegionsFiltered[filt.list$`HS-Sch-2`$AllRegionsFiltered$SVTYPE =="INV"])
-ss <-data.frame(fus)
-
-#List of fusion genes from cosmic gene list
-fusion.gene <- sort(all.genes.cosmic.gr[grepl("fusion",all.genes.cosmic.gr$Role.in.Cancer)])
-i=4
-for(i in seq_len(length(sample.names))){
-  sn <- sample.names[i]
-  gr.data <- filt.list[[sn]]$AllRegions
-  if(is.null(gr.data)) next
-  gr.data <- gr.data[gr.data$SVTYPE %in% c("INV","ICR")]
-  
-  bkpnt.fus <- subsetByOverlaps(gr.data, fusion.gene)
-  # bkpnt.fus.2 <- subsetByOverlaps(toGRanges(gr.data$END,genome=genome),fusion.gene)
- 
-  
-  data.frame(bkpnt.fus)
-  fus.geness <- subsetByOverlaps(fusion.gene, bkpnt.fus)
-  # fus.geness <- subsetByOverlaps(fusion.gene, bkpnt.fus.2)
-  
-  bkpnt.fus <-bkpnt.fus[bkpnt.fus$Genes %in% fus.geness$Gene.Symbol]
-  fus.geness <-fus.geness[fus.geness$Gene.Symbol%in%bkpnt.fus$Genes ]
-  print(bkpnt.fus)
-  print(fus.geness)
-}
-
+# ######### Fusion genes DDBB ##### 
+# filt.list$`HS-Sch-2`
+# fus <- subsetByOverlaps(all.fusion.genes.cosmic.gr, filt.list$`HS-Sch-2`$AllRegionsFiltered[filt.list$`HS-Sch-2`$AllRegionsFiltered$SVTYPE =="INV"])
+# ss <-data.frame(fus)
+# 
+# #List of fusion genes from cosmic gene list
+# fusion.gene <- sort(all.genes.cosmic.gr[grepl("fusion",all.genes.cosmic.gr$Role.in.Cancer)])
+# i=4
+# for(i in seq_len(length(sample.names))){
+#   sn <- sample.names[i]
+#   gr.data <- filt.list[[sn]]$AllRegions
+#   if(is.null(gr.data)) next
+#   gr.data <- gr.data[gr.data$SVTYPE %in% c("INV","ICR")]
+#   
+#   bkpnt.fus <- subsetByOverlaps(gr.data, fusion.gene)
+#   # bkpnt.fus.2 <- subsetByOverlaps(toGRanges(gr.data$END,genome=genome),fusion.gene)
+#  
+#   
+#   data.frame(bkpnt.fus)
+#   fus.geness <- subsetByOverlaps(fusion.gene, bkpnt.fus)
+#   # fus.geness <- subsetByOverlaps(fusion.gene, bkpnt.fus.2)
+#   
+#   bkpnt.fus <-bkpnt.fus[bkpnt.fus$Genes %in% fus.geness$Gene.Symbol]
+#   fus.geness <-fus.geness[fus.geness$Gene.Symbol%in%bkpnt.fus$Genes ]
+#   print(bkpnt.fus)
+#   print(fus.geness)
+# }
+# 

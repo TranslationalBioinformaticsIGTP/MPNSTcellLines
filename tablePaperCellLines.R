@@ -8,26 +8,29 @@ library(karyoploteR)
 library(CopyNumberPlots)
 
 #Directories 
-execution.dir <- "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/"
+execution.dir <- "./MPNST_cellLines/WGS/"
 results.dir <- file.path(execution.dir, "results")
 table.dir <- file.path(results.dir, "tableSNVsSVs_PaperCellLines")
 if(!file.exists(table.dir))dir.create(table.dir)
 "chr7:148,807,385-148,884,245"
+
 # Loading data
-load(file = file.path(results.dir,"table.to.plot.RData"))
+# load(file = file.path(results.dir,"table.to.plot.RData"))
+load(file = file.path(results.dir,"table.to.plot.toKeep.3.RData"))
+
 table.plot <- toDataframe(unlist(as(table.to.plot,"GRangesList")))
 cells <- unique(table.plot$Sample)
 cells <- c(cells,"sp")
 cells <- cells[c(1:5,9,6:8)]
 # genes <- c("NF1", "CDKN2A", "SUZ12", "EED", "sp", "TP53", "PTEN", "RB", "sp", "BIRC5", "G1", "G2", "G3", "sp", "TWIST1", "G4", "G5", "G6")
-# genes <- c("NF1","CDKN2A","sp", "SUZ12", "EED", "sp",
-#   "TP53", "PTEN","RB1","sp",
-#   "EGFR", "ERBB2", "ERBB3", "PDGFRA", "KIT", "MET", "HGF", "CXCR4","sp",   
-#   "BIRC5",  "TWIST1", "SOX9", "AURKA","AURKB") 
+genes <- c("NF1","CDKN2A","sp", "SUZ12", "EED", "sp",
+  "TP53", "PTEN","RB1","sp",
+  "EGFR", "ERBB2", "ERBB3", "PDGFRA", "KIT", "MET", "HGF", "CXCR4","sp",
+  "BIRC5",  "TWIST1", "SOX9", "AURKA","AURKB")
 
-genes <- c("NF1","CDKN2A","sp", "SUZ12", "EED", "sp","TP53", "PTEN","RB1")
-genes <- c("EGFR", "ERBB2", "ERBB3", "PDGFRA", "KIT", "MET", "HGF", "CXCR4")
-genes <- c("BIRC5",  "TWIST1", "SOX9", "AURKA","AURKB")
+# genes <- c("NF1","CDKN2A","sp", "SUZ12", "EED", "sp","TP53", "PTEN","RB1")
+# genes <- c("EGFR", "ERBB2", "ERBB3", "PDGFRA", "KIT", "MET", "HGF", "CXCR4")
+# genes <- c("BIRC5",  "TWIST1", "SOX9", "AURKA","AURKB")
          
 
 
@@ -36,7 +39,6 @@ genes <- c("BIRC5",  "TWIST1", "SOX9", "AURKA","AURKB")
 # table.alterations <- list()
 
 table.plot.cells <- split(table.plot, table.plot$Sample)
-table.plot.cells$`STS-26T`$altered[table.plot.cells$`STS-26T`$Genes == "TP53"] <-"complete"
 
 #LOH
 loh <- matrix(rep(FALSE, length(genes)*length(cells)), nrow=length(genes))
@@ -233,7 +235,7 @@ width.total <- right.mar + left.mar +  length(cells)*(narrow.mar + cell.size) + 
 
 
 #png("Test.png", width=2*width.total, height = 2*height.total)
-svg(file.path(execution.dir,"results/tableSNVsSVs_PaperCellLines","Others.svg"), width=width.total/50, height = height.total/50)
+# svg(file.path(execution.dir,"results/tableSNVsSVs_PaperCellLines","Others.svg"), width=width.total/50, height = height.total/50)
 
 #positions of the gene names
 gy <- height.total - top.mar + 20

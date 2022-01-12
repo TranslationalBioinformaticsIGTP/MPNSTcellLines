@@ -46,24 +46,28 @@ ref.genome <- "hg38"
 # rptmskr <- read.table(file.path("/imppc/labs/eslab/mmagallon/Annotatiions/RepeatMasker/rmskr_hg38.bed"),header = FALSE, stringsAsFactors = FALSE)
 # rptmskr <- toGRanges(rptmskr, genome = ref.genome)
 
-gene.markers <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_cellLines/WGS","special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
+gene.markers <- read.table(file.path("./special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
 gene.markers.gf <- toGRanges(gene.markers$V2, genome ="hg38")
 mcols(gene.markers.gf) <- gene.markers$V1
 colnames(mcols(gene.markers.gf)) <- "Genes"
 gene.markers.gf <- sort(gene.markers.gf)
 regions.selected <- gene.markers.gf + 1e6
 
-# TSG  COSMIC list
-all.genes.cosmic <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_tumors/WGS","Census_allThu Sep 16 11_23_32 2021.tsv"), sep = "\t",header = T)
+# TSG  COSMIC list: this was downloaded from COSMIC website but make reference to uk.sanger: http://cancer.sanger.ac.uk/census,
+# this is de webpage to download this information 
+# https://cog.sanger.ac.uk/cosmic/GRCh38/cosmic/v95/cancer_gene_census.csv?AWSAccessKeyId=KRV7P7QR9DL41J9EWGA2&Expires=1642007506&Signature=oVGW10M4sf3rGTeU06M1bSFFlys%3D
+
+all.genes.cosmic <- read.table(file.path("./Census_allThu Sep 16 11_23_32 2021.tsv"), sep = "\t",header = T)
 all.genes.cosmic$Genome.Location <-  paste0("chr",all.genes.cosmic$Genome.Location)
 all.genes.cosmic <- all.genes.cosmic[nchar(all.genes.cosmic$Genome.Location)>7,]
 all.genes.cosmic.gr <- toGRanges(all.genes.cosmic$Genome.Location)
 mcols(all.genes.cosmic.gr) <- all.genes.cosmic[,c(1,2,5,6:20)]
 
-# regions.df <- toDataframe(regions.selected)
-strelka.files <- list()
 
-#################añadir mas parametros ####################
+### Loading and filtering the strelka files
+
+#Parameters to filte strelka output
+
 info.param <- c("Gene.refGene",
                 "ExonicFunc.refGene",
                 "Func.refGene",
@@ -86,9 +90,11 @@ info.param <- c("Gene.refGene",
                 "AF_popmax","GeneDetail.refGene")
 geno.param <- "AD"
 
+
 #Min VAF to filter
 min.VAF <- 0.1
 
+strelka.files <- list()
 
 for(sn in seq_len(length(sample.names))){
   sample <- sample.names[sn]
@@ -96,23 +102,23 @@ for(sn in seq_len(length(sample.names))){
   # Directories
   result.dir <- file.path(execution.dir,"results",sample)
   strelka.res.path <- file.path(result.dir, "Strelka_GermVariants2.9.10/results/variants", paste0(sample, "_annotated_PASS.vcf.gz"))
-
+  
   # strelka.res.path <- file.path(result.dir, "Strelka_GermVariants2.9.10/results/variants", paste0(sample, "_annotated.vcf.gz"))
   
   # We select only those variants present in exons or affecting splicing and we delete the synonymous_SNVs
   filt <- FilterRules(list(
     Func.refGene = function(x) as.character(unlist(info(x)$Func.refGene)) %in% c("splicing","exonic"),
     ExonicFunc.refGene = function(x) as.character(unlist(info(x)$ExonicFunc.refGene))%in% c(".","frameshift_insertion","frameshift_deletion", "stopgain", "starloss","nonsynonymous_SNV","nonframeshift_deletion","nonframeshift_insertion")))
-
+  
   
   filt2 <- filterVcf(strelka.res.path, "hg38", tempfile() , param =ScanVcfParam(fixed = NA, geno = geno.param, info=info.param) ,filters=filt, verbose = FALSE)
   
   #Loading strelka variants
   vcf <- VariantAnnotation::readVcf(file = filt2, genome = ref.genome, param = ScanVcfParam(fixed = NA, geno =geno.param,info=info.param ))
-
+  
   #Remove temp file filt2 
   file.remove(filt2)
-   
+  
   rowRanges.celltype <- rowRanges(vcf,genome = ref.genome)
   info.tumor <- info(vcf)
   mcols(rowRanges.celltype) <- cbind(mcols(rowRanges.celltype),info.tumor)
@@ -167,16 +173,16 @@ for(sn in seq_len(length(sample.names))){
   
   #Then, we decided a variant will be pathogenic if more than 5 predictors say that.
   df <- data.frame(ExonicFunc.refGene = as.character(rowRanges.celltypes$ExonicFunc.refGene), 
-                  Func.refGene = as.character(rowRanges.celltypes$Func.refGene) , 
-    SIFT_pred = as.character(rowRanges.celltypes$SIFT_pred),
-                                        Polyphen2_HDIV_pred = as.character(rowRanges.celltypes$Polyphen2_HDIV_pred),
-                                        Polyphen2_HVAR_pred = as.character(rowRanges.celltypes$Polyphen2_HVAR_pred),
-                                        LRT_pred = as.character(rowRanges.celltypes$LRT_pred),
-                                        FATHMM_pred = as.character(rowRanges.celltypes$FATHMM_pred),
-                                        MutationTaster_pred = as.character(rowRanges.celltypes$MutationTaster_pred),
-                                        MutationAssessor_pred = as.character(rowRanges.celltypes$MutationAssessor_pred))
-                                        # InterVar_automated = as.character(rowRanges.celltypes$InterVar_automated))
-
+                   Func.refGene = as.character(rowRanges.celltypes$Func.refGene) , 
+                   SIFT_pred = as.character(rowRanges.celltypes$SIFT_pred),
+                   Polyphen2_HDIV_pred = as.character(rowRanges.celltypes$Polyphen2_HDIV_pred),
+                   Polyphen2_HVAR_pred = as.character(rowRanges.celltypes$Polyphen2_HVAR_pred),
+                   LRT_pred = as.character(rowRanges.celltypes$LRT_pred),
+                   FATHMM_pred = as.character(rowRanges.celltypes$FATHMM_pred),
+                   MutationTaster_pred = as.character(rowRanges.celltypes$MutationTaster_pred),
+                   MutationAssessor_pred = as.character(rowRanges.celltypes$MutationAssessor_pred))
+  # InterVar_automated = as.character(rowRanges.celltypes$InterVar_automated))
+  
   df$SIFT_pred[df$SIFT_pred== "D"] <- "Pathogenic"
   df$Polyphen2_HDIV_pred[df$Polyphen2_HDIV_pred%in%c("D","P")] <- "Pathogenic"
   df$Polyphen2_HVAR_pred[df$Polyphen2_HVAR_pred%in%c("D","P")] <- "Pathogenic"
@@ -217,10 +223,12 @@ for(sn in seq_len(length(sample.names))){
 # load(file.path(execution.dir, "results/All_samples_Strelka_Variants_toKeepFileter.2.RData"))
 
 # After filtering the variants per sample, now we proceed to filter common variants
+#If data is comming from cell lines execute the following three lines and follow the other lines down
 strk <- unlist(as(strelka.files,"GRangesList"))
 names(strk)<-gsub(pattern = "NMS.2",replacement = "NMS-2",names(strk))
 names(strk)<-gsub(pattern = "SNF96.2",replacement = "SNF96-2",names(strk))
 
+# Else omit the three before lines and start from here
 nms <- strsplit(x = names(strk),"\\.")
 sn <- unlist(lapply(nms, function(x){x[1]}))
 nms <- unlist(lapply(nms, function(x){x[2]}))
@@ -287,28 +295,16 @@ strelka.variants
 save(strelka.variants, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_toKeepFilters.3.RData"))
 # load(file.path(execution.dir, "results/All_samples_Strelka_Variants_toKeepFilters.RData"))
 
+load(file.path(execution.dir, "results/All_samples_Strelka_Variants_toKeepFilters.3.RData"))
+lapply(strelka.variants,length)
 
 # save(strelka.variants, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_WES_toKeepFilters.2.RData"))
 # load(file.path(execution.dir, "results/All_samples_Strelka_Variants_WES_toKeepFilters.2.RData"))
 
 ######## Selecting those common variants present in both WGS and WES data  #################
-load(file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/results/All_samples_Strelka_Variants_toKeepFilters.3.RData"))
 strk.lines.wgs <- strelka.variants
-load(file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WES/results/All_samples_Strelka_Variants_WES_toKeepFilters.2.RData"))
-strk.lines.wes <- strelka.variants
-i = 1
-for(i in seq_len(length(names(strk.lines.wes)))){
-  sn <- names(strk.lines.wes)[i]
-  wgs <- strk.lines.wgs[[sn]]
-  wes <- strk.lines.wes[[sn]]
-  strk.lines.wgs[[sn]] <- wgs[names(wgs) %in% names(wes)]
-  
-}
-
-save(strk.lines.wgs, file ="/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/results/All_samples_Strelka_Variants_toKeepFilters_WGScommonWES.3.RData" )
 
 # saving specific genes mutations and cosmic genes mutations
-execution.dir <- "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS"
 for(i in seq_len(length(strk.lines.wgs))){
   sn <- names(strk.lines.wgs)[i]
   wgs <- strk.lines.wgs[[sn]]
@@ -325,7 +321,4 @@ for(i in seq_len(length(strk.lines.wgs))){
   write.table(cosmic.genes, file.path(execution.dir,"results", sn, "Strelka_GermVariants2.9.10/results/",paste0( sn, "_ExonicsnpAlteration_cosmicGenes.toKeepFiltering.3.csv")), row.names = FALSE, col.names = TRUE, quote = FALSE)
   
 }
-strk.lines.wes[strk.lines.wes$`STS-26T`$Gene.refGene=="CDKN2A"] #####
-#################EN WES NO SE DETECTA CDKN2A LA VARIANTE DE 26T MIRAR!!!!
-
 

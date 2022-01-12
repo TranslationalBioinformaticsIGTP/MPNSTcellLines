@@ -14,19 +14,21 @@ library(AnnotationHub)
 library(VariantAnnotation)
 
 ############## Functions ################
-source(file = "/imppc/labs/eslab/mmagallon/Projects/cliffhunter/SV.functions.R")
+# source(file = "/imppc/labs/eslab/mmagallon/Projects/cliffhunter/SV.functions.R")
 
 #################### Parameters & Directories #####################
-#Directory
-execution.dir <-"/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS"
-# execution.dir <-"/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_tumors/WGS"
 
-#Cell Lines
+############## Cell Lines ######
+#Directory
+execution.dir <-"./MPNST_cellLines/WGS"
+
 sample.data <- read.table(file = file.path(execution.dir,"Sample.info.txt"), header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 sample.names <- sample.data$Sample.name
 names(sample.names) <- sample.names
 
 #Tumors
+#Directory
+# execution.dir <-"./MPNST_tumors/WGS"
 # sample.names <- read.table(file = file.path(execution.dir,"sample.info.tumors.csv"), header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 # sample.names <- sample.names$Sample.name[c(2,3,8,12,14,17,22,23)]
 # sample.names <- sample.names$Sample.name[c(2,3,8,12)]
@@ -38,35 +40,56 @@ ref.genome <- "hg38"
 # rptmskr <- read.table(file.path("/imppc/labs/eslab/mmagallon/Annotatiions/RepeatMasker/rmskr_hg38.bed"),header = FALSE, stringsAsFactors = FALSE)
 # rptmskr <- toGRanges(rptmskr, genome = ref.genome)
 
-gene.markers <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_cellLines/WGS","special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
+gene.markers <- read.table(file.path("./special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
 gene.markers.gf <- toGRanges(gene.markers$V2, genome ="hg38")
 mcols(gene.markers.gf) <- gene.markers$V1
 colnames(mcols(gene.markers.gf)) <- "Genes"
 gene.markers.gf <- sort(gene.markers.gf)
 regions.selected <- gene.markers.gf + 1e6
 
-# TSG  COSMIC list
-all.genes.cosmic <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_tumors/WGS","Census_allThu Sep 16 11_23_32 2021.tsv"), sep = "\t",header = T)
+# TSG  COSMIC list: this was downloaded from COSMIC website but make reference to uk.sanger: http://cancer.sanger.ac.uk/census,
+# this is de webpage to download this information 
+# https://cog.sanger.ac.uk/cosmic/GRCh38/cosmic/v95/cancer_gene_census.csv?AWSAccessKeyId=KRV7P7QR9DL41J9EWGA2&Expires=1642007506&Signature=oVGW10M4sf3rGTeU06M1bSFFlys%3D
+
+all.genes.cosmic <- read.table(file.path("./Census_allThu Sep 16 11_23_32 2021.tsv"), sep = "\t",header = T)
 all.genes.cosmic$Genome.Location <-  paste0("chr",all.genes.cosmic$Genome.Location)
 all.genes.cosmic <- all.genes.cosmic[nchar(all.genes.cosmic$Genome.Location)>7,]
 all.genes.cosmic.gr <- toGRanges(all.genes.cosmic$Genome.Location)
 mcols(all.genes.cosmic.gr) <- all.genes.cosmic[,c(1,2,5,6:20)]
 
-# regions.df <- toDataframe(regions.selected)
-strelka.files <- list()
 
-################ Filtering parameters ####################
+
+### Loading and filtering the strelka files
+
+#Parameters to filte strelka output
+
 info.param <- c("Gene.refGene",
                 "ExonicFunc.refGene",
                 "Func.refGene",
                 "avsnp150",
                 "AAChange.refGene",
+                "CLNALLELEID",
+                "CLNDN",
+                "CLNDISDB",
+                "CLNREVSTAT",
+                "CLNSIG",
+                "SIFT_pred",
+                "Polyphen2_HDIV_pred",
+                "Polyphen2_HVAR_pred",
+                "LRT_pred",
+                "FATHMM_pred",
+                "MutationTaster_pred",
+                "MutationAssessor_pred",
+                "InterVar_automated",
                 "AF",
                 "AF_popmax","GeneDetail.refGene")
 geno.param <- "AD"
 
+
 #Min VAF to filter
 min.VAF <- 0.1
+
+strelka.files <- list()
 
 for(sn in seq_len(length(sample.names))){
   sample <- sample.names[sn]
@@ -74,8 +97,8 @@ for(sn in seq_len(length(sample.names))){
   # Directories
   result.dir <- file.path(execution.dir,"results",sample)
   strelka.res.path <- file.path(result.dir, "Strelka_GermVariants2.9.10/results/variants", paste0(sample, "_annotated_PASS.vcf.gz.tbi"))
-
-
+  
+  
   #Loading strelka variants
   vcf <- VariantAnnotation::readVcf(file = strelka.res.path, genome = ref.genome, param = ScanVcfParam(fixed = NA, geno =geno.param,info=info.param ))
   # vcf <- VariantAnnotation::readVcf(file = strelka.res.path, genome = ref.genome, param = ScanVcfParam(info=info.param ))
@@ -106,7 +129,7 @@ for(sn in seq_len(length(sample.names))){
     }
   }
   
-   message("Starting filtering. Selecting AF< 0.01")
+  message("Starting filtering. Selecting AF< 0.01")
   rowRanges.celltype$AF_popmax <-   as.numeric(rowRanges.celltype$AF_popmax)
   rowRanges.celltype$AF_popmax[is.na(rowRanges.celltype$AF_popmax)] <- "."
   rowRanges.celltypes <- rowRanges.celltype[rowRanges.celltype$AF_popmax<0.01 | rowRanges.celltype$AF_popmax =="."]
@@ -131,7 +154,7 @@ for(sn in seq_len(length(sample.names))){
 
 # save(strelka.files, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_MutSignature.3.RData"))
 load(file.path(execution.dir, "results/All_samples_Strelka_Variants_MutSignature.3.RData"))
- 
+
 # ss <- data.frame(strelka.files$S462)
 # 
 # After filtering the variants per sample, now we proceed to filter common variants
@@ -205,175 +228,9 @@ lapply(strelka.variants,length)
 # # save(strelka.variants, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_toKeepFilters.2.RData"))
 # load(file.path(execution.dir, "results/All_samples_Strelka_Variants_toKeepFilters.2.RData"))
 
-colnames(mcols(strelka.variants$`90-8TL`))
 mut.signature.df <- data.frame(CHROM = as.character(seqnames(strk)),
                                POS = start(strk),
                                REF = strk$REF, ALT = strk$Alt,
                                SAMLEID = strk$Sample) 
 # write.table(mut.signature.df,file = file.path(execution.dir,"results","STS-26T","Strelka_GermVariants2.9.10","results",paste0("STS-26T_MutSignVariants.csv")),sep = "\t", col.names = T, row.names = F)
 write.table(mut.signature.df,file = file.path(execution.dir,"results",paste0("AllSamples_MutSignVariants.3.csv")),sep = "\t", col.names = T, row.names = F)
-# write.table(mut.signature.df,file = file.path(execution.dir,"results",paste0("AllSamples_MutSignVariants.TMB.csv")),sep = "\t", col.names = T, row.names = F)
-# 
-# 
-# ## Tumor Mutation Burden
-# strk.tmb <- strk
-# strk.tmb <- strk.tmb[strk.tmb$Func.refGene == "exonic"]
-# strk.tmb <- strk.tmb[strk.tmb$ExonicFunc.refGene %in% c("frameshift_insertion","frameshift_deletion", "nonsynonymous_SNV", "nonframeshift_deletion","nonframeshift_insertion", "stopgain","starloss")]
-# # strk.tmb <- strk.tmb[strk.tmb$avsnp150 == "."]
-# table(duplicated(names(strk.tmb)))
-# mut <- table(strk.tmb$Sample)
-# tmb.mb <- table(strk.tmb$Sample)
-# 
-# tmb.samp <- strk.tmb[strk.tmb$Sample =="90-8TL"]
-# range <- toGRanges("chr1:1-1000000")
-# subsetByOverlaps(tmb.samp,range)
-# n <- 1e6
-# gr <- GRanges(seqnames = as.character(seqlevels(strk.tmb)),))
-# tmb.mb/3000
-# barplot(tmb.mb, las =2)
-# strk <- strk.tmb
-
-
-
-
-
-# # save(strelka.files, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_NewFilters.RData"))
-# # load(file.path(execution.dir, "results/All_samples_Strelka_Variants_NewFilters.RData"))
-# 
-# # load(file.path(execution.dir, "results/All_samples_Strelka_Variants_toKeepFilters.RData"))
-# load(file.path(execution.dir, "results/All_samples_Strelka_Variants_toKeepFilters.2.RData"))
-# 
-# #save specific variants
-# for(i in seq_len(length(sample.names))){
-#   sn <- sample.names[i]
-#   strk <- strelka.variants[[sn]]
-#   # strk <- strelka.files[[sn]]
-#   rowRanges.celltype.df <- toDataframe(strk)
-#   rowRanges.celltype.df$Variants <- rownames(rowRanges.celltype.df)
-#   # rowRanges.celltype.df<- rowRanges.celltype.df[,c(1:26,28)]
-#   write.table(rowRanges.celltype.df, file.path(execution.dir,"results",sn,"Strelka_GermVariants2.9.10/results", paste0(sn,"_ExonicsnpAlteration_toKeepFiltering.2.csv")), sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
-#   
-#   
-#   rowRanges.celltypes <- subsetByOverlaps(strk,gene.markers.gf)
-#   rowRanges.celltype.df <- toDataframe(rowRanges.celltypes)
-#   rowRanges.celltype.df$Variants <- rownames(rowRanges.celltype.df)
-#   # rowRanges.celltype.df<- rowRanges.celltype.df[,c(1:26,28)]
-#   # write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration_specificGenes.2.csv")), sep = "\t", col.names = TRUE, row.names = TRUE, quote = FALSE)
-#   write.table(rowRanges.celltype.df, file.path(execution.dir,"results",sn,"Strelka_GermVariants2.9.10/results", paste0(sn,"_ExonicsnpAlteration_specificGenes.toKeepFiltering.2.csv")), sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
-#   
-#   rowRanges.celltypes <- subsetByOverlaps(strk,all.genes.cosmic.gr)
-#   rowRanges.celltype.df <- toDataframe(rowRanges.celltypes)
-#   rowRanges.celltype.df$Variants <- rownames(rowRanges.celltype.df)
-#   # rowRanges.celltype.df<- rowRanges.celltype.df[,c(1:26,28)]
-#   # write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration_specificGenes.2.csv")), sep = "\t", col.names = TRUE, row.names = TRUE, quote = FALSE)
-#   write.table(rowRanges.celltype.df, file.path(execution.dir,"results",sn,"Strelka_GermVariants2.9.10/results", paste0(sn,"_ExonicsnpAlteration_cosmicGenes.toKeepFiltering.2.csv")), sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
-#   
-# }
-# 
-# 
-# 
-# # 
-# # 
-# # 
-# # colnames(rowRanges.celltype.df)
-# #   rowRanges.celltype.df <- toDataframe(rowRanges.celltypes)
-# #   
-# 
-#   # write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration_specificGenes.2.csv")), sep = "\t", col.names = TRUE, row.names = TRUE, quote = FALSE)
-#   # write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration.csv")), sep = "\t", col.names = TRUE, row.names = TRUE, quote = FALSE)
-#   # write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration_NewFiltering.csv")), sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
-#   write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration_toKeepFiltering.csv")), sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
-#   
-#   ## Selecting specific genes
-#   rowRanges.celltypes <- subsetByOverlaps(rowRanges.celltypes,gene.markers.gf)
-#   rowRanges.celltype.df <- toDataframe(rowRanges.celltypes)
-#   rowRanges.celltype.df$Variants <- rownames(rowRanges.celltype.df)
-#   rowRanges.celltype.df<- rowRanges.celltype.df[,c(1:27)]
-#   # write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration_specificGenes.2.csv")), sep = "\t", col.names = TRUE, row.names = TRUE, quote = FALSE)
-#   write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration_specificGenes.toKeepFiltering.csv")), sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
-#   
-#   # write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(cell.line,"_Alteration_specificGenes.2.csv")), sep = "\t", col.names = TRUE, row.names = TRUE, quote = FALSE)
-#   
-#   
-#   
-#   
-#   
-#   
-#   
-#   
-#   
-#   
-  
-  
-  # 
-  # 
-  # rowRanges.celltypes$Variant_sel_status[patho >=5] <- "Pathogenic"
-  # rowRanges.celltypes$Variant_sel_status[rowRanges.celltypes$Func.refGene =="splicing"] <- "Pathogenic"
-  # rowRanges.celltypes$Variant_sel_status[rowRanges.celltypes$CLNSIG %in%c("Pathogenic","Likely_pathogenic")] <- "Pathogenic"
-  # 
-  # tokeep <- rep(FALSE,length(rowRanges.celltypes))
-  # 
-  # 
-  # 
-  # 
-  # 
-  # 
-  # 
-  # 
-  # 
-  # 
-  # 
-  # #We also get those variants no annotated in any predictor as "."
-  # uncert <- rowSums(df.pred == ".")
-  # rowRanges.celltypes$Variant_sel_status[uncert ==8] <- "."
-  # 
-  # sum.pat.uncert <-patho+uncert
-  # rowRanges.celltypes$Variant_sel_status[sum.pat.uncert ==8] <- "."
-  # 
-  # rowRanges.celltypes$Variant_sel_status[sum.pat.uncert <5] <- ""
-  # 
-  # 
-  # #we select those pathogenic and "." variants
-  # rowRanges.celltypes <- rowRanges.celltypes[rowRanges.celltypes$Variant_sel_status%in% c(".","Pathogenic")]
-  # 
-  # seqlevels(rowRanges.celltypes) <- sortSeqlevels(seqlevels(rowRanges.celltypes))
-  # rowRanges.celltypes <- sort(rowRanges.celltypes)
-  # strelka.files[[sample]] <-rowRanges.celltypes
-  # 
-  # rowRanges.celltype.df <- toDataframe(rowRanges.celltypes)
-  # rowRanges.celltype.df$Variants <- rownames(rowRanges.celltype.df)
-  # rowRanges.celltype.df<- rowRanges.celltype.df[,c(27,1:26)]
-  # 
-  # # write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration_specificGenes.2.csv")), sep = "\t", col.names = TRUE, row.names = TRUE, quote = FALSE)
-  # # write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration.csv")), sep = "\t", col.names = TRUE, row.names = TRUE, quote = FALSE)
-  # write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration_NewFiltering.csv")), sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
-  # 
-  # ## Selecting specific genes
-  # rowRanges.celltypes <- subsetByOverlaps(rowRanges.celltypes,gene.markers.gf)
-  # rowRanges.celltype.df <- toDataframe(rowRanges.celltypes)
-  # rowRanges.celltype.df$Variants <- rownames(rowRanges.celltype.df)
-  # rowRanges.celltype.df<- rowRanges.celltype.df[,c(27,1:26)]
-  # # write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration_specificGenes.2.csv")), sep = "\t", col.names = TRUE, row.names = TRUE, quote = FALSE)
-  # write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration_specificGenes.NewFilters.csv")), sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
-  # 
-  # # write.table(rowRanges.celltype.df, file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(cell.line,"_Alteration_specificGenes.2.csv")), sep = "\t", col.names = TRUE, row.names = TRUE, quote = FALSE)
-  # 
-  
-
-
-
-#recurrence of SNVs
-# 
-# recurrence.list <- list()
-# gr <- c()
-# for(i in seq_len(length(sample.names))){
-#   sample <- sample.names[i]
-#   message("Getting Setrelka variants of specific Genes from ", sample)
-#   # Directories
-#   result.dir <- file.path(execution.dir,"results",sample)
-#   
-#   df <-read.table(file.path(result.dir,"Strelka_GermVariants2.9.10/results", paste0(sample,"_ExonicsnpAlteration.csv")), sep = "\t", header = TRUE)
-#   df$Sample <- sample
-#   gr <- c(gr,toGRanges(df))
-# }
-

@@ -13,7 +13,7 @@ library(DECIPHER)
 library(AnnotationHub)
 library(StructuralVariantAnnotation)
 ############## Functions ################
-source(file = "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/CliffHunter.functions.R")
+source(file = "./CliffHunter.functions.R")
 
 #.unlist()
 .unlist <- function (x){
@@ -52,12 +52,21 @@ getGeneAnnot <- function(df, txdb ){
 }
 
 #################### Parameters & Directories #####################
-# cell.lines
-sample.names <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/Sample.info.txt"), header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+###### cell.lines ######
+# Directories
+execution.dir <- "./MPNST_cellLines/WGS"
+
+# Sample information
+sample.names <- read.table(file.path(execution.dir, "Sample.info.txt"), header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 sample.names <- sample.names[,2]
-cell.line <- "S462"
-# cell.line <- "NMS.2"
-# cell.line <- "ST88-14"
+
+########### MPNST Tumors ########
+# Directories
+# execution.dir <- "./MPNST_tumors/WGS"
+
+# Sample information
+# sample.names <- read.table(file.path("./MPNST_tumors/WGS/sample.info.tumors.csv"), header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+# sample.names <- sample.names[,2]
 
 ref.genome.fq <- "/imppc/labs/eslab/mmagallon/Genomes/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz"
 ref.genome <- "hg38"
@@ -80,7 +89,7 @@ cnv.ucsc.hg38 <- sortSeqlevels(cnv.ucsc.hg38)
 cnv.ucsc.hg38 <- sort(cnv.ucsc.hg38)
 
 #Selection of interesting genes
-gene.markers <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_cellLines/WGS","special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
+gene.markers <- read.table(file.path("./special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
 gene.markers.gf <- toGRanges(gene.markers$V2)
 
 mcols(gene.markers.gf) <- gene.markers$V1
@@ -113,10 +122,9 @@ gene.markers.gf <- gene.markers.gf[gene.markers.gf$Genes %in% c("NF1","SUZ12","E
 regions.selected <- gene.markers.gf + 1e6
 regions.df <- toDataframe(regions.selected)
 
-# Directories
-execution.dir <- "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS"
 
-#### Execution CliffHunter ####
+
+############################## Execution CliffHunter ##########################################
 sample.names <- sample.names[-1]
 for(i in seq_len(length(sample.names))){
   cell.line <- sample.names[i]
@@ -124,11 +132,12 @@ for(i in seq_len(length(sample.names))){
   #Directoreies
   result.dir <- file.path(execution.dir,"results",cell.line)
   cliff.dir <- file.path(result.dir,"CliffHunteR")
+  
   if(!file.exists(cliff.dir)) dir.create(cliff.dir)
-  complete.bampath <- file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/results", cell.line,"BAM", paste0(cell.line, ".bam"))
+  complete.bampath <- file.path(execution.dir,"results", cell.line,"BAM", paste0(cell.line, ".bam"))
   
   
-  bampath <- file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/results/", cell.line,"CliffHunteR", paste0(cell.line, "_selected_regions.bam"))
+  bampath <- file.path(execution.dir,"results", cell.line, "CliffHunteR", paste0(cell.line, "_selected_regions.bam"))
   
   if(!file.exists(bampath)){
     
@@ -145,7 +154,7 @@ for(i in seq_len(length(sample.names))){
   }
   
   ################### Cliff analysis ###############
-  bampath <- file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/results/", cell.line,"CliffHunteR", paste0(cell.line, "_selected_regions.bam"))
+  bampath <- file.path(execution.dir,"results", cell.line, "CliffHunteR", paste0(cell.line, "_selected_regions.bam"))
   
   SV <- getSVposition(bampath = bampath, ref_genome = ref.genome,
                       chr.style = "UCSC",
@@ -238,7 +247,7 @@ for(i in seq_len(length(sample.names))){
   SV <- unique(SV)
   
   #Rename of genes based on our special.genes
-  gene.markers <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_cellLines/WGS/","special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
+  gene.markers <- read.table(file.path("./special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
   gene.markers.gf <- toGRanges(gene.markers$V2)
   mcols(gene.markers.gf) <- gene.markers$V1
   colnames(mcols(gene.markers.gf)) <- "Genes"
