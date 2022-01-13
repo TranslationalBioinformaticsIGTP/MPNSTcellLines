@@ -15,30 +15,24 @@ if(!file.exists(table.dir))dir.create(table.dir)
 "chr7:148,807,385-148,884,245"
 
 # Loading data
-# load(file = file.path(results.dir,"table.to.plot.RData"))
 load(file = file.path(results.dir,"table.to.plot.toKeep.3.RData"))
 
 table.plot <- toDataframe(unlist(as(table.to.plot,"GRangesList")))
+table.plot.cells <- split(table.plot, table.plot$Sample)
+
 cells <- unique(table.plot$Sample)
 cells <- c(cells,"sp")
 cells <- cells[c(1:5,9,6:8)]
 # genes <- c("NF1", "CDKN2A", "SUZ12", "EED", "sp", "TP53", "PTEN", "RB", "sp", "BIRC5", "G1", "G2", "G3", "sp", "TWIST1", "G4", "G5", "G6")
-genes <- c("NF1","CDKN2A","sp", "SUZ12", "EED", "sp",
-  "TP53", "PTEN","RB1","sp",
-  "EGFR", "ERBB2", "ERBB3", "PDGFRA", "KIT", "MET", "HGF", "CXCR4","sp",
-  "BIRC5",  "TWIST1", "SOX9", "AURKA","AURKB")
-
 # genes <- c("NF1","CDKN2A","sp", "SUZ12", "EED", "sp","TP53", "PTEN","RB1")
 # genes <- c("EGFR", "ERBB2", "ERBB3", "PDGFRA", "KIT", "MET", "HGF", "CXCR4")
 # genes <- c("BIRC5",  "TWIST1", "SOX9", "AURKA","AURKB")
-         
+genes <- c("NF1","CDKN2A","sp", "SUZ12", "EED", "sp",
+           "TP53", "PTEN","RB1","sp",
+           "EGFR", "ERBB2", "ERBB3", "PDGFRA", "KIT", "MET", "HGF", "CXCR4","sp",
+           "BIRC5",  "TWIST1", "SOX9", "AURKA","AURKB")         
 
-
-
-# cells <- list("S462", "ST88-14", "90-8", "sp", "STS-26T", "HS-PSS", "HS-Sch2")
-# table.alterations <- list()
-
-table.plot.cells <- split(table.plot, table.plot$Sample)
+###### Building the table to represent the mutational status table of specific genes ########
 
 #LOH
 loh <- matrix(rep(FALSE, length(genes)*length(cells)), nrow=length(genes))
@@ -139,32 +133,15 @@ for(i in seq_len(length(table.plot.cells))){
   }
 }
 
-
-
-
-
-# 
-# 
-# 
-# #Para los datos lo más fácil es crear una matriz de length(genes) filas y length(cells) columnas para cada cosa
-# 
-# unique(table.plot$Genes)
-# 
-# # creating the table.matrix to plot
-# 
-# 
-# 
-# 
-# 
-#Create table
+###### Create the table ####
 
 plot(x=20:80, y=20:80)
 
 createCell <- function(x, y, size=25, loh=FALSE, snv=FALSE, snv.col="black", snv.cex=3, sv=FALSE, sv.col="black", sv.cex=2.5, inact=FALSE, gain=FALSE, het.loss=FALSE, hom.loss=FALSE) {
   mid <- ((size-1)/2)
-
+  
   rect(xleft=x-mid, ybottom = y-mid, xright = x+mid, ytop = y+mid, col="#CCCCCC", border=NA)
-
+  
   if(loh) {
     rect(xleft=x-mid, xright=x+mid, ybottom=y-mid, ytop=y-(mid/2), col="dodgerblue", border=NA)
   }
@@ -188,36 +165,13 @@ createCell <- function(x, y, size=25, loh=FALSE, snv=FALSE, snv.col="black", snv
   if(inact) {
     segments(x0 = x-mid, y0 = y-mid, x1 = x+mid, y1 = y+mid, col="#333333", lwd=6)
     segments(x0=x-mid, y1 = y-mid, x1 = x+mid, y0 = y+mid, col="#333333", lwd=6)
-
+    
   }
 }
 
-# plot(x=20:80, y=20:80, type="n")
-# createCell(50, 50, loh=TRUE, sv=TRUE, snv=TRUE, hom.loss=TRUE, inact=TRUE)
-# # createCell(50, 50, loh=loh, sv=sv, snv=snv, hom.loss=hom.loss, inact=inact)
-# 
-# # 
-# # genes <- c("NF1", "CDKN2A", "SUZ12", "EED", "sp", "TP53", "PTEN", "RB", "sp", "BIRC5", "G1", "G2", "G3", "sp", "TWIST1", "G4", "G5", "G6")
-# # cells <- list("S462", "ST88-14", "90-8", "sp", "STS-26T", "HS-PSS", "HS-Sch2")
-# 
-# 
-# #Para los datos lo más fácil es crear una matriz de length(genes) filas y length(cells) columnas para cada cosa
-# 
-# #LOH
-# loh <- matrix(rep(FALSE, length(genes)*length(cells)), nrow=length(genes))
-# loh[2,3] <- TRUE #ejemplo
-# 
-# 
-# #SNV
-# snv <- matrix(rep(FALSE, length(genes)*length(cells)), nrow=length(genes))
-# snv[1,6] <- TRUE #ejemplo
-# 
 
 
-
-
-
-#Create an empty plot
+##### Create an empty plot #####
 
 graphics::par(mar=c(0,0,0,0)+0.1)
 
@@ -235,7 +189,7 @@ width.total <- right.mar + left.mar +  length(cells)*(narrow.mar + cell.size) + 
 
 
 #png("Test.png", width=2*width.total, height = 2*height.total)
-# svg(file.path(execution.dir,"results/tableSNVsSVs_PaperCellLines","Others.svg"), width=width.total/50, height = height.total/50)
+svg(file.path(execution.dir,"results/tableSNVsSVs_PaperCellLines","Others.svg"), width=width.total/50, height = height.total/50)
 
 #positions of the gene names
 gy <- height.total - top.mar + 20
