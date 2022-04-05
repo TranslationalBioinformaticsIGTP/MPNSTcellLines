@@ -15,7 +15,7 @@ library(VariantAnnotation)
 
 ############## Functions ################
 # source(file = "/imppc/labs/eslab/mmagallon/Projects/cliffhunter/SV.functions.R")
-source(file = "./Integrative_Biology_Functions.R")
+source(file = "./StrelkaLoadingProcesing_Functions.R")
 
 #################### Parameters & Directories #####################
 
