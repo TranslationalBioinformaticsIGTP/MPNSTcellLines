@@ -68,17 +68,17 @@ sample.names <- sample.names[,2]
 # sample.names <- read.table(file.path("./MPNST_tumors/WGS/sample.info.tumors.csv"), header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 # sample.names <- sample.names[,2]
 
-ref.genome.fq <- "/imppc/labs/eslab/mmagallon/Genomes/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz"
+ref.genome.fq <- "./GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz"
 ref.genome <- "hg38"
 orgdb <- org.Hs.eg.db
 
 #repeatMasker 
-rptmskr <- read.table(file.path("/imppc/labs/eslab/mmagallon/Annotatiions/RepeatMasker/rmskr_hg38.bed"),header = FALSE, stringsAsFactors = FALSE)
+rptmskr <- read.table(file.path("./rmskr_hg38.bed"),header = FALSE, stringsAsFactors = FALSE)
 rptmskr <- toGRanges(rptmskr, genome = ref.genome)
 rptmskr <-filterChromosomes(rptmskr)
 
 #CNV UCSC track
-cnv.ucsc.hg38 <- read.table("/imppc/labs/eslab/mmagallon/Annotatiions/DGV_population.bed", sep = "\t",header = FALSE)
+cnv.ucsc.hg38 <- read.table("./DGV_population.bed", sep = "\t",header = FALSE)
 cnv.ucsc.hg38 <- toGRanges(cnv.ucsc.hg38)
 unique(cnv.ucsc.hg38$V9)
 cnv.ucsc.hg38$V9[cnv.ucsc.hg38$V9 == "139,69,19"] <- "Loss_Gain"

@@ -9,20 +9,20 @@ library(VariantAnnotation)
 library(BSgenome.Hsapiens.UCSC.hg38.masked)
 
 ######################## Functions #########################################
-source(file = "/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/loadingLumpySVs.R")
-source(file = "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/funtionsPaperCellLines.R")
-source(file= "/imppc/labs/eslab/mmagallon/Projects/RNA-Seq-timecourse.2/Analysis/rna_seq_Functions.R")
+source(file = "./loadingLumpySVs.R")
+source(file = "./funtionsPaperCellLines.R")
+
 ################## Parameters #######################
-execution.dir <- "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/SNP-array"
+execution.dir <- "./MPNST_cellLines/SNP-array"
 
 # Loading the SNParray data from WGS
 load(file.path(execution.dir,"results","MPNST_WGS_cellLines_BAF_Filtered.RData"))
 
-##### loading GAP SNP-array data ####
-data.dir <- "/imppc/labs/eslab/bgel/Pipelines/Executions/SNPArrayCopyNumberCalling/v0.2"
-result.dir <- "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/SNP-array/results/paperCDKN2A"
+##### loading GAP SNP-array data:download data from synapse ####
+data.dir <- ""
+result.dir <- "./MPNST_cellLines/SNP-array/results/paperCDKN2A"
 
-cell.lines <- read.table("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/SNP-array/cellLinesDataBernatDir.csv",sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+cell.lines <- read.table("./MPNST_cellLines/SNP-array/cellLinesDataBernatDir.csv",sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 sample.names <- cell.lines$sample.name
 # cell.lines <-cell.lines[c(4,2,1,5,3,6,8,7),]
 rownames(cell.lines)<- sample.names
@@ -60,7 +60,7 @@ for(i in seq_len(length(segment.files))){
 # Plot parameters
 ###################
 ####Plot BAF LRR CN images
-load(file = file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS","results","table.to.plot.RData"))
+load(file = file.path("./MPNST_cellLines/WGS","results","table.to.plot.RData"))
 
 
 cn.colors <- getCopyNumberColors()
@@ -79,7 +79,7 @@ i=13
 for(i in seq_len(nrow(cell.lines))){
   cl <- rownames(cell.lines)[i]
   
-  result.dir <- file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/SNP-array/results/",cl)
+  result.dir <- file.path("./MPNST_cellLines/SNP-array/results/",cl)
   if(!file.exists(result.dir))dir.create(result.dir)
   
   png(file.path(result.dir, paste0(cl,"_BAF_LRR_CN_",chr,".3.png")), width = 2500, height = 800)
@@ -153,7 +153,7 @@ plotDefaultPlotParams(plot.type = 3, plot.params = pp)
 
 chr <- "canonical"
 
-result.dir <- file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/SNP-array/results/Group_images")
+result.dir <- file.path("./MPNST_cellLines/SNP-array/results/Group_images")
 if(!file.exists(result.dir))dir.create(result.dir)
   
 png(file.path(result.dir, paste0("SupDoc1.1_BAF_LRR_CN_",chr,".Genes.png")), width = 1800, height = 1000)
@@ -265,7 +265,7 @@ for(i in seq_len(length(cell.names[c(1:3,7)]))){
   
   chr <- "canonical"
   
-  result.dir <- file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/SNP-array/results/Group_images")
+  result.dir <- file.path("./MPNST_cellLines/SNP-array/results/Group_images")
   if(!file.exists(result.dir))dir.create(result.dir)
   
   png(file.path(result.dir, paste0("SupDoc2.1_BAF_LRR_CN_",chr,".Genes.shadow.png")), width = 1800, height = 1000)

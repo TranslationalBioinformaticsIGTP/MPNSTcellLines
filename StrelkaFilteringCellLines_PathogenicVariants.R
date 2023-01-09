@@ -14,7 +14,6 @@ library(AnnotationHub)
 library(VariantAnnotation)
 
 ############## Functions ################
-# source(file = "/imppc/labs/eslab/mmagallon/Projects/cliffhunter/SV.functions.R")
 source(file = "./StrelkaLoadingProcesing_Functions.R")
 
 #################### Parameters & Directories #####################
@@ -30,12 +29,8 @@ num.rep.samples <- 3
 wes.wgs <- "wgs"
 
 #Genome
-ref.genome.fq <- "/imppc/labs/eslab/mmagallon/Genomes/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz"
+ref.genome.fq <- "./GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz"
 ref.genome <- "hg38"
-
-#repeatMasker 
-# rptmskr <- read.table(file.path("/imppc/labs/eslab/mmagallon/Annotatiions/RepeatMasker/rmskr_hg38.bed"),header = FALSE, stringsAsFactors = FALSE)
-# rptmskr <- toGRanges(rptmskr, genome = ref.genome)
 
 gene.markers <- read.table(file.path("./special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
 gene.markers.gf <- toGRanges(gene.markers$V2, genome ="hg38")
@@ -98,7 +93,7 @@ min.VAF <- 0.1
 prop.thr <- 0.6
 
 # loading somatic rs present in icgc and cosmic
-all.rs <- read.table(file.path("/imppc/labs/eslab/mmagallon/Annotatiions/all.rsnames.icgcAndCosmic.txt"), header = F)
+all.rs <- read.table(file.path("./all.rsnames.icgcAndCosmic.txt"), header = F)
 
 strelka.files <- list()
 
@@ -169,7 +164,6 @@ for(sn in seq_len(length(sample.names))){
 save(strelka.files, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_PathogenicVar.v4.RData"))#function
 # load(file.path(execution.dir, "results/All_samples_Strelka_Variants_PathogenicVar.v4.RData"))
 
-# ss <- data.frame(strelka.files$S462)
 
 
 # After filtering the variants per sample, now we proceed to filter common variants
@@ -240,7 +234,7 @@ mut <- table(strk$Sample)
 barplot(mut,las=2)
 
 strelka.variants <- split(strk, strk$Sample)
-# save(strelka.variants, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_PathogenicVarFiltered.v4.RData"))#Filter icgc
+save(strelka.variants, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_PathogenicVarFiltered.v4.RData"))#Filter icgc
 load(file.path(execution.dir, "results/All_samples_Strelka_Variants_PathogenicVarFiltered.v4.RData"))
 
 #Saving pathogenic variants

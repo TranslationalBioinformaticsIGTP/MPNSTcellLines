@@ -13,7 +13,7 @@ changeTemplate <- function(x, template, replacement) {
 }
 # First we need to generate a file per sample containing all ICR and INV
 #INV and ICR will have an specific color.
-execution.dir <- "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS"
+execution.dir <- "./MPNST_cellLines/WGS"
 
 #Creating circos directory
 for(i in seq_len(length(sample.names))){
@@ -65,19 +65,19 @@ for (i in seq_len(length(sample.names))){
   sample.name <-sample.names[i]
   # cluster.file <- file.path(execution.dir, "toRunInCluster", paste0("Run_in_cluster_",test, ".sh"))
   cluster.file <- file.path(execution.dir,"Circos_files/WGS_MPNST_CL", paste0(test, ".conf"))
-  cluster.file <-'/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/Circos_files/WGS_MPNST_CL/circos.transloc.conf'
+  cluster.file <-'./MPNST_cellLines/WGS/Circos_files/WGS_MPNST_CL/circos.transloc.conf'
   # t <- thr[sample.name,]
   # fq.dir <- sample.data$file.fastq[i]
   content <- readLines(cluster.file)
   # content <- changeTemplate(content, "{%SAMPLE_DIR}", execution.dir)
   content <- changeTemplate(content,"{%SAMPLE_NAME%}", sample.name)
-  new.cluster.file <- file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/Circos_files/WGS_MPNST_CL", paste0(test,"_", sample.name,".conf"))
+  new.cluster.file <- file.path("./MPNST_cellLines/WGS/Circos_files/WGS_MPNST_CL", paste0(test,"_", sample.name,".conf"))
   
   write(content, file = new.cluster.file)
   
   ### Lunch pipeline
   # if (test == "StrelkaGerm"){
-  #   # if (length( list.files(file.path("/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_Tumors/WGS/results/", sample.name,"/Strelka_GermVariants"))) != 0) next
+  #   # if (length( list.files(file.path("./MPNST_Tumors/WGS/results/", sample.name,"/Strelka_GermVariants"))) != 0) next
   # }else{
   #   if(length(list.files(file.path("/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_Tumors/WGS/results/", sample.name,"/Manta_ManConfig_hg38"))) != 0) next
   # }

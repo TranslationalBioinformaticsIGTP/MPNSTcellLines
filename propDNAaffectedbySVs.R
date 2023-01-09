@@ -7,15 +7,14 @@ library(BSgenome.Hsapiens.UCSC.hg38.masked)
 library(regioneR)
 
 ######################## Functions #########################################
-source(file = "/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/loadingLumpySVs.R")
-source(file = "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/funtionsPaperCellLines.R")
-source(file= "/imppc/labs/eslab/mmagallon/Projects/RNA-Seq-timecourse.2/Analysis/rna_seq_Functions.R")
+source(file = "/loadingLumpySVs.R")
+source(file = "./funtionsPaperCellLines.R")
 ################## Parameters #######################
-execution.dir <- "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS"
+execution.dir <- "./MPNST_cellLines/WGS"
 
 #Cosmic and Gene files
 #Selection of interesting genes
-gene.markers <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_cellLines/WGS","special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
+gene.markers <- read.table(file.path("./special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
 gene.markers.gf <- toGRanges(gene.markers$V2,genome = genome)
 mcols(gene.markers.gf) <- gene.markers$V1
 colnames(mcols(gene.markers.gf)) <- "Genes"

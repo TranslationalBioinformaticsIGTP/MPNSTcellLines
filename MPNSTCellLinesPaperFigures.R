@@ -11,15 +11,14 @@ library(VariantAnnotation)
 library(BSgenome.Hsapiens.UCSC.hg38.masked)
 
 ######################## Functions #########################################
-source(file = "/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/loadingLumpySVs.R")
-source(file = "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/funtionsPaperCellLines.R")
-source(file= "/imppc/labs/eslab/mmagallon/Projects/RNA-Seq-timecourse.2/Analysis/rna_seq_Functions.R")
+source(file = "./loadingLumpySVs.R")
+source(file = "./funtionsPaperCellLines.R")
 ################## Parameters #######################
 execution.dir <- "./MPNST_cellLines/WGS"
 
 #Cosmic and Gene files
 #Selection of interesting genes
-gene.markers <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_cellLines/WGS","special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
+gene.markers <- read.table(file.path("./special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
 gene.markers.gf <- toGRanges(gene.markers$V2,genome = genome)
 mcols(gene.markers.gf) <- gene.markers$V1
 colnames(mcols(gene.markers.gf)) <- "Genes"
@@ -51,7 +50,7 @@ gene.markers.gf<- gene.markers.gf[gene.markers.gf$Genes %in% c("NF1","SUZ12","EE
                                                                "TWIST1"
 )]
 # TSG  COSMIC list
-all.genes.cosmic <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_tumors/WGS","Census_allThu Sep 16 11_23_32 2021.tsv"), sep = "\t",header = T)
+all.genes.cosmic <- read.table(file.path("./Census_allThu Sep 16 11_23_32 2021.tsv"), sep = "\t",header = T)
 all.genes.cosmic$Genome.Location <-  paste0("chr",all.genes.cosmic$Genome.Location)
 all.genes.cosmic <- all.genes.cosmic[nchar(all.genes.cosmic$Genome.Location)>7,]
 all.genes.cosmic.gr <- toGRanges(all.genes.cosmic$Genome.Location)
@@ -65,7 +64,7 @@ tumor.sup.gr <- all.genes.cosmic.gr[grepl("TSG", all.genes.cosmic.gr$Role.in.Can
 #Fusion Genes Cosmic
 
 table(all.fusion.genes.cosmic$PRIMARY_HISTOLOGY)
-all.fusion.genes.cosmic <- read.csv(file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_tumors/WGS","CosmicFusionExport.tsv"), sep = "\t",header = T,comment.char = "")
+all.fusion.genes.cosmic <- read.csv(file.path("./CosmicFusionExport.tsv"), sep = "\t",header = T,comment.char = "")
 
 all.fusion.genes.cosmic <- data.frame(chr = paste0("chr",all.fusion.genes.cosmic$X3._CHROMOSOME),
                                       start = all.fusion.genes.cosmic$X3._GENOME_START_FROM,
@@ -79,7 +78,6 @@ all.fusion.genes.cosmic.gr <- toGRanges(all.fusion.genes.cosmic, genome = "hg38"
 
 
 # gene.markers <- toGRanges(data.frame(chr= c("chr9", "chr17", "chr17", "chr17", "chr11"), start = c(21967753,31094927, 31937007,7668230, 86245050), end = c(21975098, 31377677, 32001038, 7687366,86278810), symbol = c("CDKN2A", "NF1", "SUZ12", "TP53", "EED")))
-# gene.markers.df <- read.table(file.path( "/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_cellLines/WGS","special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
 # gene.markers <- toGRanges(gene.markers.df$V2, genome="hg38")
 # mcols(gene.markers) <- gene.markers.df$V1
 # colnames(mcols(gene.markers)) <- "symbol"
@@ -87,13 +85,7 @@ all.fusion.genes.cosmic.gr <- toGRanges(all.fusion.genes.cosmic, genome = "hg38"
 
 
 
-# s462.genes <- read.table("/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_cellLines/WGS/results/S462/S462.ctf.csv", header = T, sep = "\t")
-# gene.markers$S462 <- ""
-# gene.markers$S462.mut.label <- ""
-# for(i in seq_len(nrow(s462.genes))){
-# gene.markers$S462[gene.markers$symbol ==s462.genes$symbol[i]] <-  s462.genes$Altered[i]
-# gene.markers$mut.label[gene.markers$symbol ==s462.genes$symbol[i]] <-s462.genes$mut.label[i]
-# }
+
 
 # Loading Cell lines's sample info
 sample.data <- read.table(file.path(execution.dir,"Sample.info.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)[-c(9,10),]
@@ -128,10 +120,10 @@ load(file= file.path(execution.dir, "results/CNVkit_cn_AllSamples.RData"))
 ### SNParray 
 
 ##### loading GAP SNP-array data from MPNST Cell lines
-data.dir <- "/imppc/labs/eslab/bgel/Pipelines/Executions/SNPArrayCopyNumberCalling/v0.2"
-result.dir <- "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/SNP-array/results/paperCDKN2A"
+data.dir <- ""
+result.dir <- "./MPNST_cellLines/SNP-array/results/paperCDKN2A"
 
-cell.lines <- read.table("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/SNP-array/cellLinesDataBernatDir.csv",sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+cell.lines <- read.table("./MPNST_cellLines/SNP-array/cellLinesDataBernatDir.csv",sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 cell.lines <-cell.lines[c(4,2,1,5,3,6,8,7),]
 rownames(cell.lines)<- names(sample.names)
 sample.names
@@ -167,7 +159,7 @@ for(i in seq_len(length(segment.files))){
 
 # We have to load GAP snp-array data from Tumors
 #Loading segment data
-sample.info.tumors <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_Tumors/SNPArrays","SNP_ARRAY_MPNST.csv"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+sample.info.tumors <- read.table(file.path("./SNP_ARRAY_MPNST.csv"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 file.path.mpnst <- sample.info.tumors$File_Path
 data.path.mpnst <- file.path(sample.info.tumors$Data_path,"data")
 
@@ -178,7 +170,7 @@ names(off.name)<- sample.names.tumor
 names(data.path.mpnst) <- sample.names.tumor
 
 data.dir <- data.path.mpnst
-result.dir <- "/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_Tumors/SNPArrays/results/hg38SnpArray/"
+result.dir <- "./SNPArrays/results/hg38SnpArray/"
 sample.names
 
 segment.files.tumor <- list()
@@ -338,7 +330,7 @@ for(j in seq_len(length(group))){
   losses.cell.cn$sample <- sn
   
   # Plot Figure 1 cell lines paper
-  image.dir<-"/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS/results/images.paper"
+  image.dir<-"./MPNST_cellLines/WGS/results/images.paper"
   
   
   svg(filename = file.path(image.dir, paste0("F1_celllinesAndTumors_", gr, "_alleles.2.svg")), width = 45, height = 15)

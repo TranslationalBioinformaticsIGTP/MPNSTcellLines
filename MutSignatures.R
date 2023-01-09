@@ -11,7 +11,7 @@ qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
 col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
 
 
-execution.dir<- "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/WGS"
+execution.dir<- "./MPNST_cellLines/WGS"
 image.dir <- file.path(execution.dir,"results/MutSignatures/images")
 if(!file.exists(image.dir))dir.create(image.dir)
 mut.signatures.df <- read.table(file = file.path(execution.dir,"results",

@@ -14,7 +14,6 @@ library(AnnotationHub)
 library(VariantAnnotation)
 
 ############## Functions ################
-# source(file = "/imppc/labs/eslab/mmagallon/Projects/cliffhunter/SV.functions.R")
 source(file = "./StrelkaLoadingProcesing_Functions.R")
 
 #################### Parameters & Directories #####################
@@ -30,12 +29,9 @@ num.rep.samples <- 1
 wes.wgs <- "wgs"
 
 #Genome
-ref.genome.fq <- "/imppc/labs/eslab/mmagallon/Genomes/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz"
+ref.genome.fq <- "./GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz"
 ref.genome <- "hg38"
 
-#repeatMasker 
-# rptmskr <- read.table(file.path("/imppc/labs/eslab/mmagallon/Annotatiions/RepeatMasker/rmskr_hg38.bed"),header = FALSE, stringsAsFactors = FALSE)
-# rptmskr <- toGRanges(rptmskr, genome = ref.genome)
 
 gene.markers <- read.table(file.path("./special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
 gene.markers.gf <- toGRanges(gene.markers$V2, genome ="hg38")
@@ -76,7 +72,7 @@ geno.param <- c("AD","DP")
 min.VAF <- 0.1
 
 # loading somatic rs present in icgc and cosmic
-all.rs <- read.table(file.path("/imppc/labs/eslab/mmagallon/Annotatiions/all.rsnames.icgcAndCosmic.txt"), header = F)
+all.rs <- read.table(file.path("./all.rsnames.icgcAndCosmic.txt"), header = F)
 
 strelka.files <- list()
 
@@ -117,13 +113,10 @@ for(sn in seq_len(length(sample.names))){
 }
 
 
-# save(strelka.files, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_MutSignature.3.RData"))#Paper
-# load(file.path(execution.dir, "results/All_samples_Strelka_Variants_MutSignature.3.RData"))
-
 save(strelka.files, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_MutSignature.v4.RData"))#function
 load(file.path(execution.dir, "results/All_samples_Strelka_Variants_MutSignature.v4.RData"))
 
-# ss <- data.frame(strelka.files$S462)
+
 
 # After filtering the variants per sample, now we proceed to filter common variants
 strk <- unlist(as(strelka.files,"GRangesList"))
@@ -178,19 +171,11 @@ mut <- table(strk$Sample)
 barplot(mut,las=2)
 
 strelka.variants <- split(strk, strk$Sample)
-# save(strelka.variants, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_MutSignatureFiltered.3.RData"))#paper
-# load(file.path(execution.dir, "results/All_samples_Strelka_Variants_MutSignatureFiltered.3.RData"))
 save(strelka.variants, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_MutSignatureFiltered.v4.RData"))#Filter icgc
 load(file.path(execution.dir, "results/All_samples_Strelka_Variants_MutSignatureFiltered.v4.RData"))
 
-# save(strelka.variants, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_WES.RData"))
-# load(file.path(execution.dir, "results/All_samples_Strelka_Variants_MutSignatureFiltered.3.RData"))
 
 
-unlist(lapply(strelka.variants,length))
-
-# # save(strelka.variants, file = file.path(execution.dir, "results/All_samples_Strelka_Variants_toKeepFilters.2.RData"))
-# load(file.path(execution.dir, "results/All_samples_Strelka_Variants_toKeepFilters.2.RData"))
 
 mut.signatures.df <- data.frame(CHROM = as.character(seqnames(strk)),
                                POS.START = start(strk),
@@ -198,7 +183,5 @@ mut.signatures.df <- data.frame(CHROM = as.character(seqnames(strk)),
                                REF = strk$REF, 
                                ALT = strk$ALT,
                                SAMPLEID = strk$Sample) 
-# write.table(mut.signature.df,file = file.path(execution.dir,"results","STS-26T","Strelka_GermVariants2.9.10","results",paste0("STS-26T_MutSignVariants.csv")),sep = "\t", col.names = T, row.names = F)
-# write.table(mut.signature.df,file = file.path(execution.dir,"results",paste0("AllSamples_MutSignVariants.3.csv")),sep = "\t", col.names = T, row.names = F)#paper
 write.table(mut.signatures.df,file = file.path(execution.dir,"results",paste0("AllSamples_MutSignVariants.v4.csv")),sep = "\t", col.names = T, row.names = F)#functions
 

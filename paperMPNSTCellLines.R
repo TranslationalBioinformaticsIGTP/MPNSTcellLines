@@ -10,13 +10,13 @@ library(BSgenome.Hsapiens.UCSC.hg38.masked)
 
 ######################## Functions #########################################
 source(file = "./loadingLumpySVs.R")
-source(file = "./MPNST_cellLines/funtionsPaperCellLines.R")
+source(file = "./funtionsPaperCellLines.R")
 ################## Parameters #######################
 execution.dir <- "./MPNST_cellLines/WGS"
 
 #Cosmic and Gene files
 #Selection of interesting genes
-gene.markers <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_cellLines/WGS","special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
+gene.markers <- read.table(file.path("./special.genes.txt"), header = FALSE, sep = " ", stringsAsFactors = FALSE)
 gene.markers.gf <- toGRanges(gene.markers$V2,genome = genome)
 mcols(gene.markers.gf) <- gene.markers$V1
 colnames(mcols(gene.markers.gf)) <- "Genes"
@@ -47,8 +47,12 @@ gene.markers.gf<- gene.markers.gf[gene.markers.gf$Genes %in% c("NF1","SUZ12","EE
                                                        "CXCR4",
                                                        "TWIST1"
 )]
-# TSG  COSMIC list
-all.genes.cosmic <- read.table(file.path("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_tumors/WGS","Census_allThu Sep 16 11_23_32 2021.tsv"), sep = "\t",header = T)
+
+# TSG  COSMIC list: this was downloaded from COSMIC website but make reference to uk.sanger: http://cancer.sanger.ac.uk/census,
+# this is the webpage to download this information 
+# https://cog.sanger.ac.uk/cosmic/GRCh38/cosmic/v95/cancer_gene_census.csv?AWSAccessKeyId=KRV7P7QR9DL41J9EWGA2&Expires=1642007506&Signature=oVGW10M4sf3rGTeU06M1bSFFlys%3D
+
+all.genes.cosmic <- read.table(file.path("./Census_allThu Sep 16 11_23_32 2021.tsv"), sep = "\t",header = T)
 all.genes.cosmic$Genome.Location <-  paste0("chr",all.genes.cosmic$Genome.Location)
 all.genes.cosmic <- all.genes.cosmic[nchar(all.genes.cosmic$Genome.Location)>7,]
 all.genes.cosmic.gr <- toGRanges(all.genes.cosmic$Genome.Location)
@@ -114,9 +118,7 @@ for(i in seq_len(length(sample.names))){
   
   names(mcols(logs))[2] <- "lrr"
   sample.log[[sn]] <-logs
-  # sample.seg[[sample]] <- loadCopyNumberCallsCNVkit(file.path("/imppc/labs/eslab/mmagallon/Projects/Locus_CDKN2A/MPNST_Tumors/WGS/results",sample,"CNVkit/ExcludedRegions", paste0(sample,"_seg.cns")))
-  # sample.cn[[sample]] <- loadCopyNumberCallsCNVkit(file.path(execution.dir, "results", sample, "CNVkit/ExcludedRegions2", paste0(sample,"_call_4.2.cns")))
-  sample.cn[[sn]] <- loadCopyNumberCallsCNVkit(file.path(execution.dir, "results", sample, "CNVkit/ExcludedRegions2_ploidy", paste0(sample,"_call_ploidy.cns")))
+    sample.cn[[sn]] <- loadCopyNumberCallsCNVkit(file.path(execution.dir, "results", sample, "CNVkit/ExcludedRegions2_ploidy", paste0(sample,"_call_ploidy.cns")))
   
   # loh
   loh <- sample.cn[[sn]]$cn1 != sample.cn[[sn]]$cn2
@@ -151,9 +153,6 @@ cliff.info.samples <- split(cliff.info.samples, cliff.info.samples$sample)
 cliff.info.sample.genes <- lapply(cliff.info.samples,function(x){subsetByOverlaps(x, gene.markers.gf)})
 
 #Lumpy Filtered Data
-# load(file = file.path(execution.dir,"results/",paste0("All_Lumpy_SV_Regions_FilteredCommonSVinSamples.RData")))
-# load(file = file.path(execution.dir,"results/",paste0("All_Lumpy_SV_Regions_FilteredCommonSVinSamples.2.RData")))
-# load(file = file.path(execution.dir,"results/",paste0("All_Lumpy_SV_Regions_FilteredCommonSVinSamples.v3.RData")))
 load(file = file.path(execution.dir,"results/",paste0("All_Lumpy_SV_Regions_FilteredCommonSVinSamples.v4.RData")))
 
 
@@ -232,7 +231,6 @@ join.cliff.lumpy$`HS-Sch-2` <- join.cliff.lumpy$`HS-Sch-2`[-c(1,2,5)]
 
 
 #Strelka Filtered Variants
-# load(file = file.path(execution.dir, "results/All_samples_Strelka_Variants.RData"))
 # load(file = file.path(execution.dir, "results/All_samples_Strelka_Variants_NewFilters.RData"))
 load(file.path(execution.dir, "results/All_samples_Strelka_Variants_toKeepFilters.3.RData"))
 
@@ -304,7 +302,7 @@ load(file.path(execution.dir,"results","MPNST_WGS_cellLines_BAF_Filtered.RData")
 data.dir <- "/imppc/labs/eslab/bgel/Pipelines/Executions/SNPArrayCopyNumberCalling/v0.2"
 result.dir <- "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/SNP-array/results/paperCDKN2A"
 
-cell.lines <- read.table("/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_cellLines/SNP-array/cellLinesDataBernatDir.csv",sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+cell.lines <- read.table("./MPNST_cellLines/SNP-array/cellLinesDataBernatDir.csv",sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 cell.lines <-cell.lines[c(4,2,1,5,3,6,8,7),]
 rownames(cell.lines)<- names(sample.names)
 sample.names

@@ -23,7 +23,7 @@ n <- 2 # Number of the same breakpoint to delete
 sample.names <- read.table(file.path(execution.dir,"Sample.info.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 sample.names <- sample.names$Sample.name
 
-#  Lumpy file
+#  Lumpy file:lumpy results
 vcf.file <-file.path(execution.dir,"results/Lumpy_smoove_hg38/MPNST_cellLines_mw6-smoove.genotyped.vcf.gz")
 
 # Lumpy dir
@@ -37,46 +37,23 @@ for(sample in sample.names){
 # Lumpy file to save
 lumpy.file <- "All_Lumpy_SV_Regions_FilteredCommonSVinSamples.v4.RData"
 
-#### Tumors ####
-# # Directories
-# execution.dir <- "/imppc/labs/eslab/mmagallon/Projects/Integrative_Biology/MPNST_tumors/WGS"
-# n <- 4 # Number of the same breakpoint to delete
-#
-# # Sample information
-# sample.names <- read.table(file = file.path(execution.dir,"sample.info.tumors.csv"), header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-# # sample.names <- sample.names$Sample.name[c(2,3,8,12)]
-# sample.names <- sample.names$Sample.name[c(6,13:nrow(sample.names))]
-#
-# # lumpy file
-# vcf.file <-file.path(execution.dir,"results/LumpySmoove_TumorNormal/SJdD_TumorsNormal_mw10-smoove.genotyped.vcf.gz")
-# # Lumpy dir
-# for(sample in sample.names){
-#   # images.dir <- file.path(execution.dir,"results", sample, "CNVkit/ExcludedRegions2","images")
-#   lumpy.dir <- file.path(execution.dir,"results", sample, "Lumpy")
-#   if(!file.exists(lumpy.dir))dir.create(lumpy.dir)
-#   # if(!file.exists(images.dir))dir.create(images.dir)
-# }
-# 
-# # Lumpy file to save
-# lumpy.file <- "All_Lumpy_SV_Regions_FilteredCommonSV_SJdD_Samples.v4.RData"
-
 
 ###### Loading iformation from data bases needed to filter the variants #####
 
 # Genome
-ref.genome.fq <- "/imppc/labs/eslab/mmagallon/Genomes/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna"
+ref.genome.fq <- "./GCA_000001405.15_GRCh38_no_alt_analysis_set.fna"
 ref.genome <- "hg38"
 orgdb <- org.Hs.eg.db
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 genome <- "hg38"
 
 # repeatMasker 
-rptmskr <- read.table(file.path("/imppc/labs/eslab/mmagallon/Annotatiions/RepeatMasker/rmskr_hg38.bed"),header = FALSE, stringsAsFactors = FALSE)
+rptmskr <- read.table(file.path("./rmskr_hg38.bed"),header = FALSE, stringsAsFactors = FALSE)
 rptmskr <- toGRanges(rptmskr, genome = ref.genome)
 rptmskr <-filterChromosomes(rptmskr)
 
 # CNV UCSC track
-cnv.ucsc.hg38 <- read.table("/imppc/labs/eslab/mmagallon/Annotatiions/DGV_population.bed", sep = "\t",header = FALSE)
+cnv.ucsc.hg38 <- read.table("./DGV_population.bed", sep = "\t",header = FALSE)
 cnv.ucsc.hg38 <- toGRanges(cnv.ucsc.hg38)
 unique(cnv.ucsc.hg38$V9)
 cnv.ucsc.hg38$V9[cnv.ucsc.hg38$V9 == "139,69,19"] <- "Loss_Gain"
